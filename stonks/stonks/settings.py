@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-0_p#wg-c!z&s=32s4mb17)u08^_&%t$@^5(d3on6a#v(g1owtw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -69,6 +69,8 @@ TEMPLATES = [
         },
     },
 ]
+
+AUTH_USER_MODEL = "api.User"
 
 WSGI_APPLICATION = 'stonks.wsgi.application'
 
