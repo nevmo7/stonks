@@ -19,6 +19,9 @@ class UserManager(BaseUserManager):
 
         user.set_password(password)
         user.save(using=self._db)
+        buying_power = BuyingPower(user = user)
+        buying_power.save()
+
         return user
 
     def create_superuser(self, username, email, password=None):
@@ -59,24 +62,26 @@ class User(AbstractBaseUser):
     def has_module_perms(self, app_label):
         return True
 
-class Orders(models.Model):
-    username = models.ForeignKey(User, on_delete=models.CASCADE)
-    buy_price = models.IntegerField(null=False)
-    stock_ticker = models.CharField(max_length=6)
-    date_created = models.DateTimeField(auto_now_add=True)
 
 class Watchlist(models.Model):
-    username = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     stock_ticker = models.CharField(max_length=6)
 
 class Portfolio(models.Model):
-    username = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     stock_ticker = models.CharField(max_length=6)
     units = models.IntegerField(null=False)
+    buy_price = models.FloatField(null=False, default=0)
+
 
 class BuyingPower(models.Model):
-    amount = OneToOneField(User, primary_key=True, default=0, on_delete=models.CASCADE)
+    user = OneToOneField(User, primary_key=True, on_delete=models.CASCADE)
+    amount = models.FloatField(null=False, default=0)
 
-    def __str__(self):
+    def getBuyingPower(username, self):
         return self.amount
+
+
+
+
     

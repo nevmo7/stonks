@@ -5,5 +5,8 @@ urlpatterns = [
     path('', index),
     path('login', index),
     path('signup', index),
-    path('profile', index),
+    path('dashboard', index),
+    path('wallet', index),
+    path('stock/<str:symbol>', index),
+    path('watchlist', index)
 ]

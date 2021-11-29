@@ -92,7 +92,7 @@ function Login (props){
                 <Card>
                     <Input style={{margin: 10}} icon='user' iconPosition='left' placeholder='Username' onChange={handleUsernameChange}/>
                     <Input style={{margin: 10}} icon='key' iconPosition='left' placeholder='Password' type="password" onChange={handlePassChange}/>
-                    <Button style={{maxWidth:270, margin: 10}} animated='fade' onClick={loginUser}>
+                    <Button style={{maxWidth:270, margin: 10}} animated='fade' onClick={loginUser} onKeyPress={loginUser}>
                     <Button.Content visible>Login</Button.Content>
                         <Button.Content hidden>
                             <Icon name='arrow right' />

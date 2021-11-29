@@ -1,13 +1,7 @@
-
-from .models import User
 from rest_framework import serializers
+from .models import *
 
-class UserSerializer(serializers.ModelSerializer):
+class WatchlistSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ('id', 'username', 'email', 'password')
-
-class SignUpUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'password')
+        model = Watchlist
+        fields = ("stock_ticker")

@@ -28,8 +28,9 @@
   main {
     margin-left: 5rem;
     padding: 1rem;
+    margin-bottom: 8rem;
   }
-  
+
   .navbar {
     width: 5rem;
     height: 100vh;
@@ -136,6 +137,8 @@
       bottom: 0;
       width: 100vw;
       height: 5rem;
+      position: fixed;
+      margin-top: 5rem;
     }
   
     .logo {
@@ -151,14 +154,15 @@
     }
   
     main {
-      margin: 0;
-      margin-bottom: 5rem;
+      margin-left: 0;
+      margin-bottom: 30px;
       
     }
   }
   
   /* Large screens */
   @media only screen and (min-width: 600px) {
+
     .navbar {
       top: 0;
       width: 5rem;
@@ -180,6 +184,14 @@
   
     .navbar:hover .logo-text{
       left: 0px;
+    }
+
+    main {
+      margin-bottom: 5rem;
+    }
+
+    #main {
+      padding-bottom: 5rem;
     }
   }
 

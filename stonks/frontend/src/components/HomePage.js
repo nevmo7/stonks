@@ -3,9 +3,12 @@ import {BrowserRouter as Router, Route, Switch, useHistory, Link, Redirect} from
 import { Grid, Button, Menu, Sidebar, Icon, Search, Header, Divider } from 'semantic-ui-react';
 import Login from "./Login";
 import SignUp from "./SignUp";
-import Profile from "./Profile"
-import News from "./News";
+import Dashboard from "./Dashboard";
 import NavBar from "./NavBar";
+import Landing from "./Landing";
+import Wallet from "./Wallet";
+import Stock from "./Stock";
+import Watchlist from "./Watchlist";
 // import { HomePageHeader } from "./HomePageHeader";
 
 function HomePage(params) {
@@ -44,36 +47,19 @@ function HomePage(params) {
         return cookieValue;
     }
 
-    function renderHeader(){
-        return(<div>
-            <Grid centered>
-                <Grid.Row>
-            
-                </Grid.Row>
-                <Grid.Row columns="1">
-                <Search/>
-                </Grid.Row>
-            
-            </Grid>
-    
-            <Header.Subheader>Portfolio Value 
-                <Header as="h1">$5000
-                </Header>
-            </Header.Subheader>
-            </div>);
-    }
-
     return(
 
         <Router> 
         {loginStatus? <NavBar/> : null}
         <main style={loginStatus ? null: {marginLeft: 0} }>
-        {loginStatus? renderHeader() : null}
         <Switch>
-            <Route path='/login'> {loginStatus? <Redirect to="/"/> : <Login/>} </Route>
-            <Route exact path='/'>{loginStatus ? <News/> : <Redirect to="/login"/>} </Route>
-            <Route path='/signup'>{loginStatus? <Redirect to="/"/> : <SignUp/>}</Route>
-            <Route path='/profile' component={Profile}></Route>
+            <Route exact path='/'>{loginStatus? <Redirect to="/dashboard"/> : <Landing/>}</Route>
+            <Route path='/login'> {loginStatus? <Redirect to="/dashboard"/> : <Login/>} </Route>
+            <Route path='/signup'>{loginStatus? <Redirect to="/dashboard"/> : <SignUp/>}</Route>
+            <Route path='/dashboard'>{loginStatus ? <Dashboard /> : <Redirect to="/login"/>}</Route>
+            <Route path='/wallet'>{loginStatus ? <Wallet/> : <Redirect to="/login"/>}</Route>
+            <Route path='/stock/:symbol'>{loginStatus ? <Stock/> : <Redirect to="/login"/>}</Route>
+            <Route path='/watchlist'>{loginStatus ? <Watchlist/> : <Redirect to="/login"/>}</Route>
         </Switch>
         
         </main>
