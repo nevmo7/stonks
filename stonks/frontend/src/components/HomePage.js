@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {BrowserRouter as Router, Route, Switch, useHistory, Link, Redirect} from "react-router-dom";
-import { Grid, Button, Menu, Sidebar, Icon, Search, Header, Divider } from 'semantic-ui-react';
 import Login from "./Login";
 import SignUp from "./SignUp";
 import Dashboard from "./Dashboard";
@@ -9,14 +8,18 @@ import Landing from "./Landing";
 import Wallet from "./Wallet";
 import Stock from "./Stock";
 import Watchlist from "./Watchlist";
+import Ranking from "./Ranking";
+import Settings from "./Settings";
+import ResetPass from "./ResetPass";
 // import { HomePageHeader } from "./HomePageHeader";
 
-function HomePage(params) {
+function HomePage(props) {
 
     const[loginStatus, setLoginStatus] = useState(true);
+    var csrftoken = getCookie('csrftoken');
 
     useEffect(()=>{
-        var csrftoken = getCookie('csrftoken');
+       
         const requestOptions = {
             method: "GET",
             headers: { "Content-Type": "application/json", 'X-CSRFToken': csrftoken},
@@ -56,10 +59,13 @@ function HomePage(params) {
             <Route exact path='/'>{loginStatus? <Redirect to="/dashboard"/> : <Landing/>}</Route>
             <Route path='/login'> {loginStatus? <Redirect to="/dashboard"/> : <Login/>} </Route>
             <Route path='/signup'>{loginStatus? <Redirect to="/dashboard"/> : <SignUp/>}</Route>
-            <Route path='/dashboard'>{loginStatus ? <Dashboard /> : <Redirect to="/login"/>}</Route>
-            <Route path='/wallet'>{loginStatus ? <Wallet/> : <Redirect to="/login"/>}</Route>
-            <Route path='/stock/:symbol'>{loginStatus ? <Stock/> : <Redirect to="/login"/>}</Route>
-            <Route path='/watchlist'>{loginStatus ? <Watchlist/> : <Redirect to="/login"/>}</Route>
+            <Route path='/dashboard'>{loginStatus ? <Dashboard csrftoken={csrftoken}/> : <Redirect to="/login"/>}</Route>
+            <Route path='/ranking'>{loginStatus ? <Ranking csrftoken={csrftoken}/> : <Redirect to="/login"/>}</Route>
+            <Route path='/wallet'>{loginStatus ? <Wallet csrftoken={csrftoken}/> : <Redirect to="/login"/>}</Route>
+            <Route path='/stock/:symbol'>{loginStatus ? <Stock csrftoken={csrftoken}/> : <Redirect to="/login"/>}</Route>
+            <Route path='/watchlist'>{loginStatus ? <Watchlist csrftoken={csrftoken}/> : <Redirect to="/login"/>}</Route>
+            <Route path='/settings'>{loginStatus ? <Settings csrftoken={csrftoken}/> : <Redirect to="/login"/>}</Route>
+            <Route path='/reset-pass'>{loginStatus ? <Dashboard csrftoken={csrftoken}/> : <ResetPass/>}</Route>
         </Switch>
         
         </main>

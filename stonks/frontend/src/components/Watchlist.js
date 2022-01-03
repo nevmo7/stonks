@@ -92,7 +92,16 @@ function Watchlist(props){
                 </Grid.Row>
             </Grid>
             <Table basic='very' selectable>
-               
+                <Table.Header>
+                    <Table.Row>
+                        <Table.HeaderCell>Ticker</Table.HeaderCell>
+                        <Table.HeaderCell>Name</Table.HeaderCell>
+                        <Table.HeaderCell textAlign="right">Day change</Table.HeaderCell>
+                        <Table.HeaderCell textAlign="right">Day % change</Table.HeaderCell>
+                        <Table.HeaderCell textAlign="right">Last price</Table.HeaderCell>
+                        <Table.HeaderCell>Remove</Table.HeaderCell>
+                    </Table.Row>
+                </Table.Header>
                 <Table.Body>
                     {renderWatchlist()}
                 </Table.Body>

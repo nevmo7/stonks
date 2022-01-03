@@ -11,10 +11,15 @@ export default function HomePage(props) {
     const[portfolioValue, setPortfolioValue] = useState(0);
     const[portfolioReturn, setPortfolioReturn] = useState(0);
     const[positions, setPositions] = useState([]);
+    const[topGainer, setTopGainer] = useState([]);
+    const[topLoser, setTopLoser] = useState([]);
 
     useEffect(() => {
-        getBuyingPower();
+        getGainers();
+        getLosers();
         getPortfolio();
+        getBuyingPower();
+        
     }, []);
 
     function getBuyingPower(){
@@ -25,8 +30,30 @@ export default function HomePage(props) {
         fetch("/api/get_funds", requestOptions).then((response) => response.json())
         .then((data) => {
             if(data.Success){
-                console.log(data.Success);
                 setAvailablefunds(data.Success);
+            }
+        });
+    }
+    function getGainers(){
+        const requestOptions = {
+            method: "GET",
+            headers: { "Content-Type": "application/json"},
+        };
+        fetch("/stock-api/get-top-gainers", requestOptions).then((response) => response.json())
+        .then((data) => {
+            setTopGainer(data.slice(0,10));
+        });
+    }
+
+    function getLosers(){
+        const requestOptions = {
+            method: "GET",
+            headers: { "Content-Type": "application/json"},
+        };
+        fetch("/stock-api/get-top-losers", requestOptions).then((response) => response.json())
+        .then((data) => {
+            if(data){
+                setTopLoser(data.slice(0,10));
             }
         });
     }
@@ -66,46 +93,161 @@ export default function HomePage(props) {
                     <Table.Cell textAlign="right"><span style={{color: negativeChange? "red": "green"}}>{stock.change}</span></Table.Cell>
                     <Table.Cell textAlign="right"><span style={{color: negativeChange? "red": "green"}}>{stock.changePercent}%</span></Table.Cell>
                     <Table.Cell textAlign="right"><span style={{color: negativeChange? "red": "green"}}>{stock.return}</span></Table.Cell>
-                    <Table.Cell textAlign="right"><span style={{color: negativeChange? "red": "green"}}>{stock.totalValue}</span></Table.Cell>
+                    <Table.Cell textAlign="right">{stock.totalValue}</Table.Cell>
                 </Table.Row>)
        });
        
        return stockList;
     }
+
+    function renderGainerList(){
+        const gainerList = [];
+        Array.from(topGainer).forEach((gainer) => {
+            
+                gainerList.push(
+                    <Table.Row>
+                    <Table.Cell collapsing>
+                        <Link to={"./stock/" + gainer.ticker}>{gainer.ticker}</Link>
+                    </Table.Cell>
+    
+                    <Table.Cell>
+                        {gainer.companyName}
+                    </Table.Cell>
+                    
+                    <Table.Cell collapsing>
+                        {gainer.price}
+                    </Table.Cell>
+    
+                    <Table.Cell collapsing textAlign='right'>
+                        <span style={{color: "green"}}>
+                            {gainer.changesPercentage}%
+                        </span>
+                    </Table.Cell>
+                </Table.Row>)
+            
+       });
+       
+       return gainerList;
+    }
+
+    function renderLoserList(){
+        const loserList = [];
+        Array.from(topLoser).forEach((gainer) => {
+            loserList.push(
+                <Table.Row>
+                <Table.Cell collapsing>
+                    <Link to={"./stock/" + gainer.ticker}>{gainer.ticker}</Link>
+                </Table.Cell>
+
+                <Table.Cell>
+                    {gainer.companyName}
+                </Table.Cell>
+                
+                <Table.Cell collapsing>
+                    {gainer.price}
+                </Table.Cell>
+
+                <Table.Cell collapsing textAlign='right'>
+                    <span style={{color: "red"}}>
+                        {gainer.changesPercentage}%
+                    </span>
+                </Table.Cell>
+            </Table.Row>)
+       });
+       
+       return loserList;
+    }
     
     return(
-        <div>
-            <Grid centered>
-                <Grid.Row columns="1">
-                    <SearchStock/>
-                </Grid.Row>
-            
-            </Grid>
-                
-            <Header.Subheader style={{margin: 10}}>Portfolio Value 
-                <Header style={{color: portfolioValue < 0? "red": "green"}} as="h1">${portfolioValue}
-                <span style={{fontSize:15}}> {portfolioReturn}</span>
-                </Header>
-            </Header.Subheader>
+        <Grid stackable>
+            <Grid.Row centered>
+                <SearchStock/>
+            </Grid.Row>
 
-            <Header.Subheader style={{margin: 10}}>Available Funds 
-                <Header as="h1">${availableFunds}
-                </Header>
-            </Header.Subheader>
-            <Segment>
-            <Table basic='very' selectable>
+            <Grid.Row stretched columns={2}>
+                
+                <Grid.Column mobile={16} tablet={16} computer={6}>
+                    <Segment>
+                    <Header.Subheader style={{margin: 10}}>
+                        Market opens in
+                        <Header as="h1">
+                            53:40
+                        </Header>
+                    </Header.Subheader>
+
+                    <Header.Subheader style={{margin: 10}}>
+                        Portfolio Value 
+                        <Header style={{color: portfolioReturn < 1? "red": "green"}} as="h1">${portfolioValue}
+                        <span style={{fontSize:15, color: portfolioReturn < 1? "red": "green"}}>({portfolioReturn})</span>
+                        </Header>
+                    </Header.Subheader>
+
+                    <Header.Subheader style={{margin: 10}}>
+                        Available Funds 
+                        <Header as="h1">${availableFunds}
+                        </Header>
+                    </Header.Subheader>
+                    </Segment>
+                </Grid.Column>
+
+                <Grid.Column mobile={16} tablet={16} computer={10}>
+                <Segment>
+                    <Header as="h5">
+                        Open Positions
+                    </Header>
+                    <Table basic='very' selectable>
+                        <Table.Header>
+                            <Table.HeaderCell>Ticker</Table.HeaderCell>
+                            <Table.HeaderCell>Name</Table.HeaderCell>
+                            <Table.HeaderCell textAlign="right">Avg. Price</Table.HeaderCell>
+                            <Table.HeaderCell textAlign="right">Units</Table.HeaderCell>
+                            <Table.HeaderCell textAlign="right">Price</Table.HeaderCell>
+                            <Table.HeaderCell textAlign="right">Change</Table.HeaderCell>
+                            <Table.HeaderCell textAlign="right">Change %</Table.HeaderCell>
+                            <Table.HeaderCell textAlign="right">Return</Table.HeaderCell>
+                            <Table.HeaderCell textAlign="right">Value</Table.HeaderCell>
+                            
+                        </Table.Header>
+                        <Table.Body>
+                            {renderPositions()}
+                        </Table.Body>
+
+                    </Table>
+                </Segment>
+                </Grid.Column>
+                
+            </Grid.Row>
+            
+        <Grid.Row columns={3}>
+            <Grid.Column width={5}>
+                <Table>
+                    <Table.Header>
+                        <Table.HeaderCell colSpan="2">Top Gainers</Table.HeaderCell>
+                        <Table.HeaderCell colSpan="2" textAlign="right"><Link to="./ranking"> See More</Link></Table.HeaderCell>
+                    </Table.Header>
+                    <Table.Body>
+                    {renderGainerList()}
+                    </Table.Body>
+                </Table>
+            </Grid.Column>
+
+            <Grid.Column width={5}>
+            <Table>
                 <Table.Header>
-                    <Table.HeaderCell>Open positions</Table.HeaderCell>
-                    
+                    <Table.HeaderCell colSpan="2">Top Losers</Table.HeaderCell>
+                    <Table.HeaderCell colSpan="2" textAlign="right"><Link to="./ranking"> See More</Link></Table.HeaderCell>
                 </Table.Header>
                 <Table.Body>
-                    {renderPositions()}
+                {renderLoserList()}
                 </Table.Body>
-
             </Table>
-            </Segment>
+            </Grid.Column>
+            
+            <Grid.Column width={6}>
             <News/>
-        </div>
+            </Grid.Column>
+        </Grid.Row>
+        </Grid>
     );
 
 }

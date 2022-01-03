@@ -54,7 +54,9 @@ class GetProfile(APIView):
         r = requests.get(url)
         data = r.json()
         td = TDClient(apikey=API_KEY_TWELVEDATA)
-        logo = td.get_logo(symbol=symbol).as_json()
+        logoRaw = requests.get("https://api.twelvedata.com/logo?symbol="+symbol+"&apikey="+API_KEY_TWELVEDATA)
+        logo = logoRaw.json()
+        print(logo)
         data["logo_url"] = logo["url"]
         data["open"] = float(data["open"])
         data["high"] = float(data["high"])

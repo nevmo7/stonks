@@ -1,10 +1,14 @@
-export function buyStock(symbol, price, unit) {
+import React, {useState, useEffect} from "react";
+import { Modal, Button } from "semantic-ui-react";
+
+export function buyStock(symbol, price, unit, name) {
     var csrftoken = getCookie('csrftoken');
     var message = "";
 
     console.log(JSON.stringify({
         ticker: symbol,
         buy_price: price,
+        company_name: name,
         units: unit
     }));
     const requestOptions = {
@@ -13,7 +17,8 @@ export function buyStock(symbol, price, unit) {
         body: JSON.stringify({
             ticker: symbol,
             buy_price: price,
-            units: unit
+            units: unit,
+            company_name: name
         }),
     };
     fetch("/api/buy_stock", requestOptions).then((response) => response.json())
@@ -26,30 +31,119 @@ export function buyStock(symbol, price, unit) {
         })
 }
 
-export function renderConfirm(){
-    return(
+export function renderSellConfirm(sellUnits, sellPrice, sellSymbol, name){
+    const [open, setOpen] = useState(false);
+    const [successOpen, setSuccessOpen] = useState(false);
+    const error = sellUnits < 1 || !sellUnits;
+    return(<div style={{width: "100%"}}>
         <Modal
-            size={size}
+            basic
+            size='tiny'
+            onClose={() => setOpen(false)}
+            onOpen={() => setOpen(true)}
             open={open}
-            onClose={() => dispatch({ type: 'close' })}
+            trigger={<Button fluid>Sell</Button>}
         >
-            <Modal.Header>Delete Your Account</Modal.Header>
+            <Modal.Header>{error?"Error":"Confirm sell"}</Modal.Header>
             <Modal.Content>
-                <p>Are you sure you want to delete your account</p>
+                {error? 
+                <p>Please Enter a valid number</p>:
+                <p>Are you sure you want to sell {sellUnits} {sellSymbol} @{sellPrice}?</p>}
             </Modal.Content>
             <Modal.Actions>
-            <Button negative onClick={() => dispatch({ type: 'close' })}>
-                No
+            <Button negative onClick={() => setOpen(false)}>
+                {error?"Ok":"No"}
             </Button>
-            <Button positive onClick={() => dispatch({ type: 'close' })}>
+            {error? null:
+            <Button positive onClick={() => {
+                setOpen(false);
+                setSuccessOpen(true);
+                sellStock(sellSymbol, sellPrice, sellUnits, name);
+                }}>
                 Yes
+            </Button>}
+            </Modal.Actions>
+        </Modal>
+
+        <Modal
+            basic
+            size='tiny'
+            onClose={() => setSuccessOpen(false)}
+            onOpen={() => setSuccessOpen(true)}
+            open={successOpen}
+        >
+            <Modal.Header>Confirm sell</Modal.Header>
+            <Modal.Content>
+                <p>Success! sold {sellUnits} of {sellSymbol} @{sellPrice}</p>
+            </Modal.Content>
+            <Modal.Actions>
+            <Button positive onClick={() => setSuccessOpen(false)}>
+                Ok
             </Button>
             </Modal.Actions>
         </Modal>
+     </div>
     );
 }
 
-export function sellStock(symbol, price, unit) {
+export function renderBuyConfirm(buyUnits, buyPrice, buySymbol, name){
+    const [open, setOpen] = useState(false);
+    const [successOpen, setSuccessOpen] = useState(false);
+    const error = buyUnits < 1 || !buyUnits;
+    return(
+        <div style={{width: "100%"}}>
+            <Modal
+                basic
+                size='tiny'
+                onClose={() => setOpen(false)}
+                onOpen={() => setOpen(true)}
+                open={open}
+                trigger={<Button fluid>Buy</Button>}
+            >
+                <Modal.Header>{error?"Error":"Confirm buy"}</Modal.Header>
+
+                <Modal.Content>
+                    {error?
+                    <p>Please Enter a valid number</p>:
+                    <p>Are you sure you want to buy {buyUnits} {buySymbol} @{buyPrice}?</p>}
+                </Modal.Content>
+                <Modal.Actions>
+                <Button negative onClick={() => setOpen(false)}>
+                    {error?"Ok":"No"}
+                </Button>
+                {error?null:
+                <Button positive onClick={() => {
+                        setOpen(false);
+                        setSuccessOpen(true)
+                        buyStock(buySymbol, buyPrice, buyUnits, name);
+                    }}>
+                    Yes
+                </Button>}
+                </Modal.Actions>
+            </Modal>
+
+            <Modal
+                basic
+                size='tiny'
+                onClose={() => setSuccessOpen(false)}
+                onOpen={() => setSuccessOpen(true)}
+                open={successOpen}
+                >
+                <Modal.Header>Confirm buy</Modal.Header>
+                <Modal.Content>
+                    <p>Success! bought {buyUnits} of {buySymbol} @{buyPrice}</p>
+                </Modal.Content>
+                <Modal.Actions>
+                <Button positive onClick={() => setSuccessOpen(false)}>
+                    Ok
+                </Button>
+                </Modal.Actions>
+            </Modal>
+        </div>
+    );
+}
+
+export function sellStock(symbol, price, unit, name) {
     var csrftoken = getCookie('csrftoken');
     var message = "";
     const requestOptions = {
@@ -58,7 +152,8 @@ export function sellStock(symbol, price, unit) {
         body: JSON.stringify({
             ticker: symbol,
             sell_price: price,
-            units: unit
+            units: unit,
+            company_name: name
         }),
     };
     fetch("/api/sell_stock", requestOptions).then((response) => response.json())

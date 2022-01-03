@@ -1,9 +1,9 @@
 import React, {useState, useEffect} from 'react';
 import { Line } from 'react-chartjs-2';
 import { useParams } from 'react-router';
-import {Grid, Header, Tab, Segment, ButtonGroup, Button, Input, Message, Image, Icon} from 'semantic-ui-react';
+import {Grid, Header, Tab, Segment, ButtonGroup, Button, Input, Message, Image, Icon, Label} from 'semantic-ui-react';
 import SearchStock from './StockSearch';
-import { buyStock, sellStock } from './handleStockTransaction';
+import { buyStock, sellStock, renderBuyConfirm, renderSellConfirm, renderErrorMsg } from './handleStockTransaction';
 
 function Stock(props){
     useEffect(()=>{
@@ -17,6 +17,9 @@ function Stock(props){
     const[buyShare, setBuyShare] = useState(true);
 
     const[displaySymbol, setDisplaySymbol] = useState();
+    const[totalBuyValue, setTotalBuyValue] = useState(0);
+    const[totalSellValue, setTotalSellValue] = useState(0);
+
     const[name, setName] = useState();
     const[high52, setHigh52] = useState();
     const[low52, setLow52] = useState();
@@ -28,7 +31,7 @@ function Stock(props){
     const[logoUrl, setLogoUrl] = useState();
     const[change, setChange] = useState();
     const[percentChange, setPercentChange] = useState();
-    const [negativeChange, setNegativeChange] = useState();
+    const[negativeChange, setNegativeChange] = useState();
 
     const [inWatchlist, setInWatchlist] = useState(false);
 
@@ -267,10 +270,15 @@ function Stock(props){
                     </Message>
                 </Grid.Row>
                 <Grid.Row centered>
-                    <Input placeholder="Enter buy amount" onChange={(e) => { setBuyUnits(parseInt(e.target.value, 0)); }}/> 
+                    <Input placeholder="Enter buy amount" onChange={(e) => { 
+                            const unitsBought = parseInt(e.target.value, 0);
+                            setBuyUnits(unitsBought); 
+                            setTotalBuyValue((unitsBought * close).toFixed(2));
+                        }}/> 
+                        <Label color="green">Total Value: {totalBuyValue}</Label>
                 </Grid.Row>
                 <Grid.Row>
-                    <Button fluid onClick={() => buyStock(displaySymbol, close, buyUnits)}>Buy</Button>
+                   {renderBuyConfirm(buyUnits, close, displaySymbol, name)}
                 </Grid.Row>
             </Grid>
             
@@ -282,10 +290,15 @@ function Stock(props){
         return(
             <Grid padded>
                 <Grid.Row centered>
-                    <Input placeholder="Enter sell amount" onChange={(e) => { setSellUnits(parseInt(e.target.value, 0));  }}/>
+                    <Input placeholder="Enter sell amount" onChange={(e) => { 
+                            const unitsSold = parseInt(e.target.value, 0);
+                            setSellUnits(unitsSold);
+                            setTotalSellValue((unitsSold * close).toFixed(2));
+                        }}/>
+                        <Label color="red">Total Value: {totalSellValue}</Label>
                 </Grid.Row>
                 <Grid.Row>
-                    <Button fluid onClick={() => sellStock(displaySymbol, close, sellUnits)}>Sell</Button>
+                    {renderSellConfirm(sellUnits, close, displaySymbol, name)}
                 </Grid.Row>
             </Grid>
         );

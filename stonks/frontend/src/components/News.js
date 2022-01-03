@@ -43,30 +43,21 @@ function News(props) {
     }
 
     return(
-        <Grid stackable>
-            <Grid.Row columns="2">
-            <Grid.Column padded>
-                    <TopLosers/>
-            </Grid.Column>
-
-            <Grid.Column padded> 
-                <TopGainers/>
-            </Grid.Column>
-            </Grid.Row>
+        <Grid>
             <Grid.Row columns="1">
-                <Grid.Column padded>
+                <Grid.Column>
+                    <Segment style={{overflow: 'auto', maxHeight: 475 }}>
                     <Header as="h2">
                         News Highlights
                     </Header>
-                    <Segment>
+                    <Divider clearing />
                     <Item.Group divided>
                         { renderNews() }
                     </Item.Group>
                     </Segment>
                 </Grid.Column>
             </Grid.Row>
-
-            </Grid>
+        </Grid>
     );
 }
 

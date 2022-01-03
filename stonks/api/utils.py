@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 from twelvedata import TDClient
 import requests
+from .models import TradingHistory
 
 API_KEY_TWELVEDATA = "51692a5557d1472c89a0bde124cadacc"
 
@@ -63,4 +64,8 @@ def getPortfolioPrice(positions):
 
     return portfolioDetails
 
-
+def addTradingHistory(user, transaction, name, ticker, units, price):
+    value = units * price
+    print("Adding to trading history")
+    th = TradingHistory(user=user, transaction=transaction, name=name, ticker=ticker, units=units, price=price, value=value)
+    th.save()

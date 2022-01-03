@@ -1,10 +1,12 @@
-from django.contrib.auth import authenticate, login, logout
-from api.models import BuyingPower, Portfolio, User, Watchlist
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.core import serializers
+from api.models import BuyingPower, Portfolio, TradingHistory, User, Watchlist
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.core import serializers
-from .utils import getPortfolioPrice, getWatchlistPrice
+from django.db.models import Count
+from .utils import getPortfolioPrice, getWatchlistPrice, addTradingHistory
 
 # Create your views here.
 class SignUpView(APIView):
@@ -39,7 +41,6 @@ class LogOut(APIView):
 
 class IsAuthenticated(APIView):
     def get(self, request, format=None):
-        # user = authenticate(username=request.data.get('username'), password=request.data.get('password'))
 
         if request.user.is_authenticated:
             return Response({"Success": request.user.is_authenticated}, status=status.HTTP_200_OK)
@@ -76,7 +77,7 @@ class GetBuyingPower(APIView):
     def get(self, request, format=None):
         if request.user.is_authenticated:
             user_id = request.user
-            available_funds = BuyingPower.objects.get(user_id=user_id).amount
+            available_funds = round(BuyingPower.objects.get(user_id=user_id).amount, 2)
             print(available_funds)
             return Response({"Success": available_funds}, status=status.HTTP_200_OK)
 
@@ -153,25 +154,32 @@ class BuyStock(APIView):
         buyPrice = request.data.get('buy_price')
         units = request.data.get('units')
         ticker= request.data.get('ticker')
-
+        companyName = request.data.get('company_name')
+        totalValue = units * buyPrice
+        available_funds = BuyingPower.objects.get(user=user).amount
         existing_holding = Portfolio.objects.filter(user=user, stock_ticker = ticker)
-        if(existing_holding):
-            existing_buy_price = existing_holding.first().buy_price
-            existing_units = existing_holding.first().units
-            new_units = units + existing_units
-            new_buy_price = round(((existing_buy_price * existing_units) + (units * buyPrice)) / new_units, 2)
-            new_holding_status = existing_holding.update(buy_price = new_buy_price, units = new_units)
 
-            available_funds = BuyingPower.objects.get(user=user).amount
-            update_fund = available_funds - (buyPrice * units)
-            add_amount_status = BuyingPower.objects.filter(user=user).update(amount=update_fund)
+        if available_funds > totalValue:
+            if(existing_holding):
+                existing_buy_price = existing_holding.first().buy_price
+                existing_units = existing_holding.first().units
+                new_units = units + existing_units
+                new_buy_price = round(((existing_buy_price * existing_units) + (units * buyPrice)) / new_units, 2)
+                new_holding_status = existing_holding.update(buy_price = new_buy_price, units = new_units)
 
-            print(new_holding_status)
-            return Response({"Success": "Successfully bought " + str(units) + "@" + str(buyPrice)}, status=status.HTTP_200_OK)
+                
+                update_fund = available_funds - (buyPrice * units)
+                BuyingPower.objects.filter(user=user).update(amount=update_fund)
+                
+                addTradingHistory(user = user, transaction="Buy", name=companyName, ticker=ticker, units=units, price=buyPrice)
+
+                return Response({"Success": "Successfully bought " + str(units) + "@" + str(buyPrice)}, status=status.HTTP_200_OK)
+            else:
+                portfolio = Portfolio(user = user, buy_price = buyPrice, units = units, stock_ticker = ticker)
+                portfolio.save()
+                return Response({"Success": "Successfully bought " + str(units) + "@" + str(buyPrice)}, status=status.HTTP_200_OK)
         else:
-            portfolio = Portfolio(user = user, buy_price = buyPrice, units = units, stock_ticker = ticker)
-            portfolio.save()
-            return Response({"Success": "Successfully bought " + str(units) + "@" + str(buyPrice)}, status=status.HTTP_200_OK)
+            return Response({"Error": "Not enough funds"}, status=status.HTTP_401_UNAUTHORIZED)
 
 class SellStock(APIView):
     def post(self, request, format=None):
@@ -179,28 +187,37 @@ class SellStock(APIView):
         sellPrice = request.data.get('sell_price')
         units = request.data.get('units')
         ticker= request.data.get('ticker')
+        name = request.data.get('company_name')
 
         portfolio_instance = Portfolio.objects.filter(user=user, stock_ticker = ticker)
+        available_funds = BuyingPower.objects.get(user=user).amount
         if portfolio_instance:
             existing_units = portfolio_instance.first().units
             if existing_units == units:
                 portfolio_instance.delete()
+                update_fund = available_funds + (sellPrice * units)
+                BuyingPower.objects.filter(user=user).update(amount=update_fund)
+
+                addTradingHistory(user=user, transaction="Sell", name=name, ticker=ticker, units=units, price=sellPrice)
+
                 return Response({"Success": "Successfully deleted"}, status=status.HTTP_200_OK)
+
             elif existing_units < units:
                 return Response({"Error": "Not enough shares to sell"}, status=status.HTTP_409_CONFLICT)
+            
             else:
                 new_units = existing_units - units
                 portfolio_instance.update(units=new_units)
-
-                available_funds = BuyingPower.objects.get(user=user).amount
-                update_fund = available_funds + (sellPrice * units)
-                add_amount_status = BuyingPower.objects.filter(user=user).update(amount=update_fund)
                 
-                return Response({"Success": "Successfully sold"})
+                update_fund = available_funds + (sellPrice * units)
+                BuyingPower.objects.filter(user=user).update(amount=update_fund)
 
+                addTradingHistory(user=user, transaction="Sell", name=name, ticker=ticker, units=units, price=sellPrice)
+
+                return Response({"Success": "Successfully sold"})
             
         else:
-            return Response({"Error": "Deletion failed"}, status=status.HTTP_200_OK)
+            return Response({"Error": "Could not sell stock"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class GetPositions(APIView):
@@ -216,4 +233,56 @@ class GetPositions(APIView):
         else:
             return Response({"Not Found": "The user doesn't have any open positions"}, status=status.HTTP_404_NOT_FOUND)
 
+class GetEmailAndUsername(APIView):
+    def get(self, request, format=None):
+        user = request.user
+        email = user.email
+        return Response({"username": str(user), "email": email}, status=status.HTTP_200_OK)
+
+class ChangeEmail(APIView):
+    def post(self, request, format=None):
+        user = request.user
+        newEmail = request.data.get('newEmail')
+        password = request.data.get('password')
+
+        filterEmail = User.objects.filter(email = newEmail)
+
+        if user.check_password(password) and not filterEmail:
+            User.objects.filter(username=user).update(email = newEmail)
+            return Response({"Success": "Successfully changed Email"}, status=status.HTTP_200_OK)
+
+        elif filterEmail:
+            return Response({"Error": "Email already exists"}, status=status.HTTP_409_CONFLICT)
+            
+        else:
+            return Response({"Error": "Invalid password"}, status=status.HTTP_401_UNAUTHORIZED)
+
+class ChangePass(APIView):
+    def post(self, request, format=None):
+        user = request.user
+        password = request.data.get('password')
+        newPassword = request.data.get('newPassword')
+
+        if user.is_authenticated:
+            if user.check_password(password):
+                print(f'{password} was an incorrect password')
+                user.set_password(newPassword)
+                user.save()
+                update_session_auth_hash(request, request.user)
+                return Response({"Success": "Successfully changed password"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"Error": "Incorrect password"}, status=status.HTTP_401_UNAUTHORIZED)     
         
+        else:
+            return Response({"Error": "User is not authenticated"})
+
+class GetTransactionHistory(APIView):
+    def get(self, request, format=None):
+        user = request.user
+        if user.is_authenticated:
+            th = TradingHistory.objects.filter(user=user).values("transaction", "date", "name", "ticker", "units", "price", "value").order_by("-date")
+            
+            print(th)
+            return Response({"Success": th}, status=status.HTTP_200_OK)
+        else:
+            return Response({"Error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)

@@ -1,6 +1,6 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
-from django.db.models.fields.related import ForeignKey, OneToOneField
+from django.db.models.fields.related import OneToOneField
 
 # Create your models here.
 
@@ -80,6 +80,17 @@ class BuyingPower(models.Model):
 
     def getBuyingPower(username, self):
         return self.amount
+
+class TradingHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    transaction = models.CharField(null=False, max_length=5)
+    date = models.DateField(null=False, auto_now=True)
+    name = models.CharField(null=False, max_length=50)
+    ticker = models.CharField(null=False, max_length=6)
+    units = models.IntegerField(null=False)
+    price = models.FloatField(null=False)
+    value = models.DecimalField(null=False, max_digits=10, decimal_places=2)
+
 
 
 

@@ -15,5 +15,9 @@ urlpatterns = [
     path('get_watchlist', GetWatchlist.as_view(), name="get_watchlist"),
     path('buy_stock', BuyStock.as_view(), name="buy_stock"),
     path('sell_stock', SellStock.as_view(), name="sell_stock"),
-    path('get_positions', GetPositions.as_view(), name="get_positions")
+    path('get_positions', GetPositions.as_view(), name="get_positions"),
+    path('email_and_username', GetEmailAndUsername.as_view(), name="get_email_and_username"),
+    path('change_email', ChangeEmail.as_view(), name="change_email"),
+    path('change_pass', ChangePass.as_view(), name="change_pass"),
+    path('get_trading_history', GetTransactionHistory.as_view(), name="get_trading_history")
 ]
